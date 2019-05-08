@@ -1,0 +1,55 @@
+#######################################
+# Syntax Coloring Map rleg
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+rleg	KEYWORD1
+Encoder	KEYWORD1
+IMU	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+startSerial	KEYWORD2
+
+begin	KEYWORD2
+read	KEYWORD2
+get	KEYWORD2
+show	KEYWORD2
+
+getAccel	KEYWORD2
+getGyro	KEYWORD2
+setMode KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+ACC_THRESHOLD1	LITERAL1
+ACC_THRESHOLD2	LITERAL1
+ACCEL_MODE	LITERAL1
+GYRO_MODE	LITERAL1
+IMU_MODE	LITERAL1
+MAXANGLE	LITERAL1
+ACTANGLE	LITERAL1
+MAXLEVEL	LITERAL1
+PWMPin	LITERAL1
+VERBOSE_OFF	LITERAL1
+VERBOSE_USB	LITERAL1
+VERBOSE_XBEE	LITERAL1
+VERBOSE_SD	LITERAL1
+VERBOSE_MODE	LITERAL1
+
+CSB_PIN	LITERAL1
+
+ACCEL_X_OFFSET	LITERAL1
+ACCEL_Y_OFFSET	LITERAL1
+ACCEL_Z_OFFSET	LITERAL1
+ACCEL_X_GAIN	LITERAL1
+ACCEL_Y_GAIN	LITERAL1
+ACCEL_Z_GAIN	LITERAL1
+GYRO_X_OFFSET	LITERAL1
+GYRO_Y_OFFSET	LITERAL1
+GYRO_Z_OFFSET	LITERAL1
