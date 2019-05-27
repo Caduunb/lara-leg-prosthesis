@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<list key="org.eclipse.ui.internal.wizards.datatransfer.SmartImportRootWizardPage.knownSources">
+		<item value="C:\Users\lemos\Documents\stm32projects\ADC_Read_TEST"/>
+		<item value="C:\Users\lemos\Documents\stm32projects\I2C_TEST"/>
+		<item value="C:\Users\lemos\Documents\stm32projects\SPI-ADXL"/>
+		<item value="C:\Users\lemos\Documents\stm32projects\SPI_TEST"/>
+		<item value="C:\Users\lemos\Documents\stm32projects\PWM_TEST"/>
+		<item value="C:\Users\lemos\Documents\stm32projects\LCD-I2C\LCD-I2C\lcd"/>
+		<item value="C:\Users\lemos\Documents\stm32projects\LCD_TEST"/>
+		<item value="C:\Users\lemos\Documents\stm32projects\LED_blink_Juliana"/>
+		<item value="C:\Users\lemos\Documents\stm32projects\LED_BLINK_USB"/>
+	</list>
+	<section name="ExternalProjectImportWizard">
+		<item value="false" key="WizardProjectsImportPage.STORE_NESTED_PROJECTS"/>
+		<item value="false" key="WizardProjectsImportPage.STORE_COPY_PROJECT_ID"/>
+		<item value="false" key="WizardProjectsImportPage.STORE_ARCHIVE_SELECTED"/>
+		<list key="WizardProjectsImportPage.STORE_DIRECTORIES">
+			<item value="C:\Ac6\en.stm32cubef1\STM32Cube_FW_F1_V1.7.0\Projects\STM32F103RB-Nucleo\Examples\SPI\SPI_FullDuplex_ComPolling"/>
+		</list>
+		<list key="WizardProjectsImportPage.STORE_ARCHIVES">
+			<item value=""/>
+		</list>
+	</section>
+</section>

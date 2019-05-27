@@ -1,0 +1,15 @@
+LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/arch=x86_64
+LaunchTargetManager/org.eclipse.launchbar.core.launchTargetType.local,Local/os=win32
+configDescList=org.eclipse.launchbar.core.descriptorType.default\:LCD_TEST Run,org.eclipse.launchbar.core.descriptorType.default\:PWM_TEST Run,org.eclipse.launchbar.core.descriptorType.default\:ADC_Read_TEST Run,org.eclipse.launchbar.core.descriptorType.default\:LED_BLINK_USB Run,org.eclipse.launchbar.core.descriptorType.default\:I2C_TEST Run,org.eclipse.launchbar.core.descriptorType.default\:ADXL345_TEST Run,org.eclipse.launchbar.core.descriptorType.default\:SPI_TEST2 Run,org.eclipse.launchbar.core.descriptorType.default\:SPI_TEST Run
+eclipse.preferences.version=1
+org.eclipse.launchbar.core.descriptorType.default\:ADC_Read_TEST\ Run/activeLaunchMode=debug
+org.eclipse.launchbar.core.descriptorType.default\:ADC_Read_TEST\ Run/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local
+org.eclipse.launchbar.core.descriptorType.default\:ADXL345_TEST\ Run/activeLaunchMode=run
+org.eclipse.launchbar.core.descriptorType.default\:I2C_TEST\ Run/activeLaunchMode=debug
+org.eclipse.launchbar.core.descriptorType.default\:I2C_TEST\ Run/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local
+org.eclipse.launchbar.core.descriptorType.default\:LCD_TEST\ Run/activeLaunchMode=debug
+org.eclipse.launchbar.core.descriptorType.default\:LED_BLINK_USB\ Run/activeLaunchMode=run
+org.eclipse.launchbar.core.descriptorType.default\:LED_BLINK_USB\ Run/activeLaunchTarget=org.eclipse.launchbar.core.launchTargetType.local\:Local
+org.eclipse.launchbar.core.descriptorType.default\:PWM_TEST\ Run/activeLaunchMode=debug
+org.eclipse.launchbar.core.descriptorType.default\:SPI_TEST\ Run/activeLaunchMode=debug
+org.eclipse.launchbar.core.descriptorType.default\:SPI_TEST2\ Run/activeLaunchMode=debug

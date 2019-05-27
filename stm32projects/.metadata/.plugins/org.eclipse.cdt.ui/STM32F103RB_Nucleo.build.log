@@ -1,0 +1,6 @@
+20:37:19 **** Incremental Build of configuration Debug for project STM32F103RB_Nucleo ****
+make all 
+make: Nothing to be done for 'all'.
+
+20:37:20 Build Finished (took 391ms)
+

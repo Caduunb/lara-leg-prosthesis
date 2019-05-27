@@ -1,0 +1,28 @@
+--cpu=Cortex-M4.fp
+"adxl\system_stm32f4xx.o"
+"adxl\main.o"
+"adxl\stm32f4xx_it.o"
+"adxl\stm32f4xx_hal_msp.o"
+"adxl\ssd1306.o"
+"adxl\fonts.o"
+"adxl\startup_stm32f446xx.o"
+"adxl\stm32f4xx_hal_i2c_ex.o"
+"adxl\stm32f4xx_hal_tim_ex.o"
+"adxl\stm32f4xx_hal_flash.o"
+"adxl\stm32f4xx_hal_dma.o"
+"adxl\stm32f4xx_hal_dma_ex.o"
+"adxl\stm32f4xx_hal_rcc_ex.o"
+"adxl\stm32f4xx_hal_rcc.o"
+"adxl\stm32f4xx_hal.o"
+"adxl\stm32f4xx_hal_gpio.o"
+"adxl\stm32f4xx_hal_pwr.o"
+"adxl\stm32f4xx_hal_flash_ramfunc.o"
+"adxl\stm32f4xx_hal_i2c.o"
+"adxl\stm32f4xx_hal_pwr_ex.o"
+"adxl\stm32f4xx_hal_tim.o"
+"adxl\stm32f4xx_hal_cortex.o"
+"adxl\stm32f4xx_hal_flash_ex.o"
+--library_type=microlib --strict --scatter "adxl\adxl.sct"
+--diag_suppress=L6329 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "adxl.map" -o adxl\adxl.axf
