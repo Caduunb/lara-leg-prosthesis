@@ -1,0 +1,70 @@
+/*STM32 library for communicating with AMT20 encoder.
+It uses a HAL layer for implementing SPI communication.
+This file must be added to the "Src" folder of the STM32 project.*/
+#include "encoder.h"
+extern SPI_HandleTypeDef hspi2;
+
+//command and response definitions
+#define NOP_A5 0x00
+#define NOP_A5_RESPONSE 0xA5
+#define READ_POS 0x10
+#define SET_ZERO_POS 0x70
+#define SET_ZERO_POS_SUCCESS 0x80
+
+char encoder_transmit_command(uint8_t command){ //transmit a command to execute action
+  uint8_t command_rec;
+
+	HAL_GPIO_WritePin (GPIOB, GPIO_PIN_12, 0); // pull the cs pin low
+	HAL_SPI_TransmitReceive (&hspi2, &command, &command_rec, 1, 100); //transmit and receive data
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, 1); // pull the cs pin high
+
+  return command_rec;
+}
+
+char encoder_get_data(uint8_t command){ //transmit a command to read data back
+  uint8_t data;
+
+	HAL_GPIO_WritePin (GPIOB, GPIO_PIN_12, 0); // pull the cs pin low
+	HAL_SPI_TransmitReceive (&hspi2, &command, &data, 1, 100); //transmit and receive data
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, 1); // pull the cs pin high
+
+  return data;
+}
+
+int encoder_set_zero_pos(){ //zeroes sensor
+	int i=0;
+  uint8_t command_rec;
+
+	command_rec = encoder_transmit_command(SET_ZERO_POS); //send set zero pos command and read answer
+	HAL_Delay(10);
+
+  while(command_rec!= SET_ZERO_POS_SUCCESS && i<10){ //tries to get a sucess answer for 10 times max
+    command_rec = encoder_transmit_command(NOP_A5); // keep sending nop commands and read answer
+    HAL_Delay(10);
+    i++;
+  }
+
+	if (command_rec == SET_ZERO_POS_SUCCESS){ //checks if got success response
+		return 1; //zeroing sucessful
+	}
+	else{
+		return 0; //zeroing unsucessful
+	}
+}
+
+void encoder_read_pos(int16_t *position){ //reads encoder position
+  uint8_t command_rec, buffer;
+
+	command_rec = encoder_transmit_command(READ_POS); //sends read position command and tries to read an echo
+	HAL_Delay(10);
+	while(command_rec != READ_POS){ //echo of the command
+	  command_rec = encoder_transmit_command(NOP_A5); // keep sending nop commands and read answer
+		HAL_Delay(10);
+	}
+	buffer = encoder_get_data(NOP_A5); //send first nop command after received the 0x10 echo and get msb to data_rec
+	*position = (buffer<<8) | 0x00; //shitf msb
+	HAL_Delay(10);
+	buffer = encoder_get_data(NOP_A5); //send second nop command after received the 0x10 echo and get lsb to data_rec
+	*position = data_rec | buffer;
+	HAL_Delay(10); //delay in-between reads
+}
