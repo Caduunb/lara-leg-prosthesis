@@ -1,3 +1,3 @@
 # lara-leg-prosthesis devel branch
 
-This is the development branch. Not every code here works. Stable versions are to be uploaded on the master branch.
+This is the master branch. Stable versions of code are uploaded here.
