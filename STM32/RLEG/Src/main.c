@@ -40,12 +40,12 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "adxl345.h"
-#include "itg3200.h"
-#include "string.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "adxl345.h"
+#include "itg3200.h"
+//#include "encoder.h"
 
 /* USER CODE END Includes */
 
@@ -57,6 +57,12 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+#define NOP_A5 0x00
+#define NOP_A5_RESPONSE 0xA5
+#define READ_POS 0x10
+#define SET_ZERO_POS 0x70
+#define SET_ZERO_POS_SUCCESS 0x80
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -65,11 +71,13 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-I2C_HandleTypeDef hi2c1;  //i2c line for imu
+I2C_HandleTypeDef hi2c1;
 
-TIM_HandleTypeDef htim2; //pwm generation
+SPI_HandleTypeDef hspi2;
 
-UART_HandleTypeDef huart1; //uart line for data logger
+TIM_HandleTypeDef htim2;
+
+UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
@@ -80,8 +88,71 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART1_UART_Init(void);
-static void MX_TIM2_Init(void);
+//static void MX_TIM2_Init(void);
+static void MX_SPI2_Init(void);
 /* USER CODE BEGIN PFP */
+
+//encoder tests
+uint16_t position;
+uint8_t command, command_rec, data;
+
+void encoder_transmit_command(uint8_t command){ //transmit a command to execute action
+
+	HAL_GPIO_WritePin (GPIOB, GPIO_PIN_12, GPIO_PIN_RESET); // pull the cs pin low
+	HAL_Delay(10);
+	HAL_SPI_Transmit(&hspi2, &command, 1, 100);
+	while(HAL_SPI_GetState(&hspi2) != HAL_SPI_STATE_READY);
+	HAL_Delay(50);
+	HAL_SPI_Receive(&hspi2, &command_rec, 1, 100);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET); // pull the cs pin high
+}
+
+void encoder_get_data(uint8_t command){ //transmit a command to read data back
+
+	HAL_GPIO_WritePin (GPIOB, GPIO_PIN_12, GPIO_PIN_RESET); // pull the cs pin low
+	HAL_Delay(10);
+	HAL_SPI_Transmit(&hspi2, &command, 1, 100);
+	while(HAL_SPI_GetState(&hspi2) != HAL_SPI_STATE_READY);
+	HAL_Delay(50);
+	HAL_SPI_Receive(&hspi2, &data, 1, 100);
+	//HAL_SPI_TransmitReceive (&hspi2, &command, &data, 2, 100); //transmit and receive data
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET); // pull the cs pin high
+
+}
+
+void encoder_read_pos(){ // reads encoder position
+
+	encoder_transmit_command(READ_POS); // sends read position command and tries to read an echo
+	HAL_Delay(250);
+	encoder_transmit_command(NOP_A5);
+	HAL_Delay(250);
+	while(command_rec != READ_POS){  // echo of the command
+	   encoder_transmit_command(NOP_A5); // keep sending nop commands and read answer
+	   HAL_Delay(50);
+	}
+	encoder_get_data(NOP_A5); // send first nop command after received the 0x10 echo and get msb to data_rec
+	position = (data<<8) | 0x00; // shitf msb
+	HAL_Delay(250);
+	encoder_get_data(NOP_A5); // send second nop command after received the 0x10 echo and get lsb to data_rec
+	position = position | data;
+	HAL_Delay(250); // delay in-between reads
+}
+
+void encoder_init(){
+	int i=0;
+
+	HAL_Delay(500); // wait 500ms for encoder initialization
+
+	for(i=0; i<3; i++)
+	{
+		encoder_transmit_command(NOP_A5);
+		HAL_Delay(250);
+	}
+
+}
+
 
 /* USER CODE END PFP */
 
@@ -122,15 +193,17 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
-  MX_TIM2_Init();
-
+  //MX_TIM2_Init();
+  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
-  adxl_init(); //accelerometer initialization
-  itg_init_no_interrupt(); //gyroscope initialization
+  //adxl_init(); //accelerometer initialization
+  //itg_init_no_interrupt(); //gyroscope initialization
   //pwm_init(); //enable pwm generation
 
-  adxl_zero_fnc(); //zeroing accelerometer
-  itg_zero_fnc(); //zeroing itg
+  //adxl_zero_fnc(); //zeroing accelerometer (by offsetting)
+  //itg_zero_fnc(); //zeroing itg (by offsetting)
+
+  encoder_init();
 
   /* USER CODE END 2 */
 
@@ -141,10 +214,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	adxl_read_data(acc_data); //reads accelerometer data
-	itg_read_data_no_interrupt(gyro_data); //reads gyroscope data
-	write_data_to_sd(acc_data, gyro_data); //writes read data to sd card
-	HAL_Delay(500); //500ms delay
+//	adxl_read_data(acc_data); //reads accelerometer data
+//	itg_read_data_no_interrupt(gyro_data); //reads gyroscope data
+//	write_data_to_sd(acc_data, gyro_data, 0); //writes read data to sd card
+//	HAL_Delay(500); //500ms delay
+	encoder_read_pos();
+	write_data_to_sd(acc_data, gyro_data, position); //writes read data to sd card
+	HAL_Delay(1000); //1000ms delay
   }
   /* USER CODE END 3 */
 }
@@ -221,6 +297,45 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief SPI2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI2_Init(void)
+{
+
+  /* USER CODE BEGIN SPI2_Init 0 */
+
+  /* USER CODE END SPI2_Init 0 */
+
+  /* USER CODE BEGIN SPI2_Init 1 */
+
+  /* USER CODE END SPI2_Init 1 */
+  /* SPI2 parameter configuration*/
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_MASTER;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 10;
+
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI2_Init 2 */
+
+  /* USER CODE END SPI2_Init 2 */
+
+}
+
+/**
   * @brief TIM2 Initialization Function
   * @param None
   * @retval None
@@ -229,7 +344,7 @@ static void MX_TIM2_Init(void)
 {
 
   /* USER CODE BEGIN TIM2_Init 0 */
-
+//
   /* USER CODE END TIM2_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
@@ -237,7 +352,7 @@ static void MX_TIM2_Init(void)
   TIM_OC_InitTypeDef sConfigOC = {0};
 
   /* USER CODE BEGIN TIM2_Init 1 */
-
+//
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 9;
@@ -273,7 +388,7 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM2_Init 2 */
-
+//
   /* USER CODE END TIM2_Init 2 */
   HAL_TIM_MspPostInit(&htim2);
 
