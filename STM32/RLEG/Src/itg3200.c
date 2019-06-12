@@ -5,14 +5,12 @@ This file must be added to the "Src" folder of the STM32 project.*/
 #include "itg3200.h"
 #include "string.h"
 extern I2C_HandleTypeDef hi2c1; // I2C channel
-extern UART_HandleTypeDef huart1; //I2C channel //COMMENT LATER
 
 #define itg_address 0x68<<1 // 0x68 addr left-shifted by 1 bit 1101000 -> 11010000
 
 // register definitions
 
 // who am i register
-#define WHO_AM_I 0x00 // WHO AM I: saves addr values of the device
 
 // filter and sample rate configurations
 #define SMPLRT_DIV 0x15 // SAMPLE RATE DIVIDER: (0 to 255)
@@ -42,16 +40,16 @@ void itg_init_no_interrupt(void){ 		// sets initial configuration of the device
 	ITG_OK = 0X00;
 	HAL_Delay(500); //wait for device to power on completely
 
-	if(HAL_I2C_IsDeviceReady(&hi2c1, itg_address, 5, 100) != HAL_OK){ //tries initialization for 5 times during 100ms each
+	while(HAL_I2C_IsDeviceReady(&hi2c1, itg_address, 5, 100) != HAL_OK){ //tries initialization for 5 times during 100ms each
 		ITG_OK = 0x01; 						// error code 1
 		itg_error();
+		HAL_Delay(500); //500ms delay to try connection again
 	}
-  else{ //device is connected
+   //device is connected
     itg_write_data(PWR_MGM, 0x00); 		// default settings and internal oscillator as clk
     itg_write_data(DLPF_FS, 0x1E); 		// set FS_SEL to 03h and DLPF_CFG to 6 (5hz cutoff freq. and 1kHz sampling rate)
     itg_write_data(SMPLRT_DIV, 0x00);   // divider = 0 => Fsample = 1kHz / (0+1) = 1kHz or 1ms per sample
     itg_write_data(INT_CFG, 0x00); 		// no use of interrupt
-  }
 }
 
 void itg_init_set_interrupt(void){ // sets initial configuration of the device
@@ -71,12 +69,6 @@ void itg_init_set_interrupt(void){ // sets initial configuration of the device
   }
 }
 
-void write_offset_to_sd(){ //writes string
-	char buffer[50];
-	sprintf(buffer, "%.2f, %.2f, %.2f \r\n", gyro_offsets[0], gyro_offsets[1], gyro_offsets[2]);
-	HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 100);
-}
-
 void itg_zero_fnc(){ //zeroing the device
   float gyro_data[3] = {0, 0, 0}; //sensor readings
   float sum_x = 0, sum_y = 0, sum_z = 0; // save each read value
@@ -85,6 +77,9 @@ void itg_zero_fnc(){ //zeroing the device
   for(i=0;i<3;i++){
   	gyro_offsets[i] = 0;
   }
+
+  itg_read_data_no_interrupt(gyro_data); //disconsider first reading
+  HAL_Delay(20);
 
   for(i=0; i<100; i++){//gets 100 gyroscope samples
     itg_read_data_no_interrupt(gyro_data); //reads values with zeroed offset
@@ -98,7 +93,6 @@ void itg_zero_fnc(){ //zeroing the device
   gyro_offsets[1] = sum_y/100;
   gyro_offsets[2] = sum_z/100;
 
-  write_offset_to_sd();
   write_string_to_sd("Gyroscope zeroed!"); //message
 
 }

@@ -42,22 +42,22 @@ void adxl_init(){ //sets initial configuration of the device
 	ADXL_OK = 0X00;
 	HAL_Delay(500); //wait for device to power on completely
 
-	if(HAL_I2C_IsDeviceReady(&hi2c1, adxl_address, 5, 100) != HAL_OK){ //tries initialization for 5 times during 100ms each
+	while(HAL_I2C_IsDeviceReady(&hi2c1, adxl_address, 5, 100) != HAL_OK){ //tries initialization for 5 times during 100ms each
 		ADXL_OK = 0x01; //error code 1
+		adxl_error();
+		HAL_Delay(500); //500ms delay to try connection again
+	}
+	//device is connected
+	chipid = adxl_read_reg(DEVID);  //reads identifier addr which must be 0xE5
+	if (chipid != 0xE5){ //device not working properly
+		ADXL_OK = 0x02; //error code 2
 		adxl_error();
 	}
 	else{
-		chipid = adxl_read_reg(DEVID);  //reads identifier addr which must be 0xE5
-		if (chipid != 0xE5){ //device not working properly
-			ADXL_OK = 0x02; //error code 2
-			adxl_error();
-		}
-		else{
-			//initial device configuration
-			adxl_write_data(POWER_CTL, 0); //reset all POWER_CTL bits
-			adxl_write_data(POWER_CTL, 0x08); //writes 1000 (measure-bit set to 1)
-			adxl_write_data(DATA_FORMAT, 0X00); // +- 2g range
-		}
+		//initial device configuration
+		adxl_write_data(POWER_CTL, 0); //reset all POWER_CTL bits
+		adxl_write_data(POWER_CTL, 0x08); //writes 1000 (measure-bit set to 1)
+		adxl_write_data(DATA_FORMAT, 0X00); // +- 2g range
 	}
 }
 
@@ -70,6 +70,9 @@ void adxl_zero_fnc(){ //zeroing the device
 	acc_offsets[i] = 0;
   }
 
+  adxl_read_data(acc_data); //disconsider first reading
+  HAL_Delay(20);
+
   for(i=0; i<100; i++){//gets 100 gyroscope samples
     adxl_read_data(acc_data);
     sum_x += acc_data[0]; //accumulates readings
@@ -80,7 +83,7 @@ void adxl_zero_fnc(){ //zeroing the device
 
   acc_offsets[0] = sum_x/100; //average value
   acc_offsets[1] = sum_y/100;
-  acc_offsets[2] = sum_z/100;
+  acc_offsets[2] = sum_z/100 - 1;
 
   write_string_to_sd("Accelerometer zeroed!"); //message
 
