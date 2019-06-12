@@ -141,3 +141,45 @@ make: Nothing to be done for 'all'.
 
 12:10:25 Build Finished (took 316ms)
 
+12:12:38 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:15:16 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:16:28 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:16:34 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:20:33 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:21:16 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:21:30 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:22:10 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:23:01 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:24:06 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:24:11 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:24:59 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:25:03 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+12:25:07 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
