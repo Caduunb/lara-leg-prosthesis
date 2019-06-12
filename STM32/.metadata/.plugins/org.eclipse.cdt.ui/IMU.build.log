@@ -1,0 +1,6 @@
+12:10:25 **** Incremental Build of configuration Debug for project IMU ****
+make all 
+make: Nothing to be done for 'all'.
+
+12:10:25 Build Finished (took 316ms)
+
