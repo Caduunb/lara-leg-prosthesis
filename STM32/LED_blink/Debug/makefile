@@ -29,13 +29,13 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: LED_blink_Juliana.elf
+all: LED_blink.elf
 
 # Tool invocations
-LED_blink_Juliana.elf: $(OBJS) $(USER_OBJS) ../STM32F103C8Tx_FLASH.ld
+LED_blink.elf: $(OBJS) $(USER_OBJS) ../STM32F103C8Tx_FLASH.ld
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU GCC Linker'
-	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -specs=nosys.specs -specs=nano.specs -T"../STM32F103C8Tx_FLASH.ld" -Wl,-Map=output.map -Wl,--gc-sections -o "LED_blink_Juliana.elf" @"objects.list" $(USER_OBJS) $(LIBS) -lm
+	arm-none-eabi-gcc -mcpu=cortex-m3 -mthumb -mfloat-abi=soft -specs=nosys.specs -specs=nano.specs -T"../STM32F103C8Tx_FLASH.ld" -Wl,-Map=output.map -Wl,--gc-sections -o "LED_blink.elf" @"objects.list" $(USER_OBJS) $(LIBS) -lm
 	@echo 'Finished building target: $@'
 	@echo ' '
 	$(MAKE) --no-print-directory post-build
@@ -47,8 +47,8 @@ clean:
 
 post-build:
 	-@echo 'Generating hex and Printing size information:'
-	arm-none-eabi-objcopy -O ihex "LED_blink_Juliana.elf" "LED_blink_Juliana.hex"
-	arm-none-eabi-size "LED_blink_Juliana.elf"
+	arm-none-eabi-objcopy -O ihex "LED_blink.elf" "LED_blink.hex"
+	arm-none-eabi-size "LED_blink.elf"
 	-@echo ' '
 
 .PHONY: all clean dependents
