@@ -60,7 +60,7 @@ static void MX_I2C1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 	RawData_Def accelrawdata, gyrorawdata;
-	ScaledData_Def accelscaledate, gyroscaledata;
+	ScaledData_Def accelscaleddata, gyroscaleddata;
 /* USER CODE END 0 */
 
 /**
@@ -117,15 +117,15 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  /* Get raw data
 	   * Obs.: accelerometer must be called first because of how the library was built!*/
-	  MPU6050_Get_Accel_RawData(&accelrawdata);
-	  MPU6050_Get_Gyro_RawData(&gyrorawdata);
+	  //MPU6050_Get_Accel_RawData(&accelrawdata);
+	  //MPU6050_Get_Gyro_RawData(&gyrorawdata);
 	  /* Get scaled data */
-	  //MPU6050_Get_Accel_RawData(&accelscaledate);
-	  //MPU6050_Get_Gyro_RawData(&gyroscaledata);
+	  MPU6050_Get_Accel_Scale(&accelscaleddata);
+	  MPU6050_Get_Gyro_Scale(&gyroscaleddata);
 
-	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0); // acende
-	  HAL_Delay(1000);
-	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1); // apaga
+	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1); // acende
+	  HAL_Delay(10);
+	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0); // apaga
   }
   /* USER CODE END 3 */
 }
@@ -207,10 +207,22 @@ static void MX_I2C1_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 }
 
