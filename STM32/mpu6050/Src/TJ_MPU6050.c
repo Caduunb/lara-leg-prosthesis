@@ -25,7 +25,7 @@ References:
 static I2C_HandleTypeDef i2cHandler;
 //2- Accel & Gyro Scaling Factor
 static float accelScalingFactor, gyroScalingFactor;
-//3- Bias varaibles
+//3- Bias variables
 static float A_X_Bias = 0.0f;
 static float A_Y_Bias = 0.0f;
 static float A_Z_Bias = 0.0f;
@@ -123,8 +123,8 @@ void MPU6050_Config(MPU_ConfigTypeDef *config)
 			break;
 		
 		case FS_SEL_500:
-				gyroScalingFactor = 500.0f/32768.0f;
-				break;
+			gyroScalingFactor = 500.0f/32768.0f;
+			break;
 		
 		case FS_SEL_1000:
 			gyroScalingFactor = 1000.0f/32768.0f;
@@ -195,7 +195,7 @@ void MPU6050_Get_Accel_RawData(RawData_Def *rawDef)
 		//Gyro Raw Data
 		I2C_Read(GYRO_XOUT_H_REG, GyroArr,6);
 		GyroRW[0] = ((GyroArr[0]<<8) + GyroArr[1]);
-		GyroRW[1] = (GyroArr[2]<<8) + GyroArr[3];
+		GyroRW[1] = ((GyroArr[2]<<8) + GyroArr[3]);
 		GyroRW[2] = ((GyroArr[4]<<8) + GyroArr[5]);
 	}
 }

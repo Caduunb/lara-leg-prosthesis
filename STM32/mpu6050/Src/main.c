@@ -23,8 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-	/* online library. Got from https://www.youtube.com/watch?v=-tvaeeJMW1w */
-	#include "TJ_MPU6050.h"
+/* online library. Got from https://www.youtube.com/watch?v=-tvaeeJMW1w */
+#include "TJ_MPU6050.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,8 +59,8 @@ static void MX_I2C1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-	RawData_Def accelrawdata, gyrorawdata;
-	ScaledData_Def accelscaleddata, gyroscaleddata;
+RawData_Def accelrawdata, gyrorawdata;
+ScaledData_Def accelscaleddata, gyroscaleddata;
 /* USER CODE END 0 */
 
 /**
@@ -123,9 +123,8 @@ int main(void)
 	  MPU6050_Get_Accel_Scale(&accelscaleddata);
 	  MPU6050_Get_Gyro_Scale(&gyroscaleddata);
 
-	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 1); // acende
-	  HAL_Delay(10);
-	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0); // apaga
+	  HAL_Delay(500);
+
   }
   /* USER CODE END 3 */
 }

@@ -87,8 +87,8 @@ enum DLPF_CFG_ENUM
 	DLPF_94A_98G_Hz 	= 0x02,
 	DLPF_44A_42G_Hz 	= 0x03,
 	DLPF_21A_20G_Hz 	= 0x04,
-	DLPF_10_Hz 				= 0x05,
-	DLPF_5_Hz 				= 0x06
+	DLPF_10_Hz 			= 0x05,
+	DLPF_5_Hz 			= 0x06
 };
 //6- e external Frame Synchronization ENUM
 enum EXT_SYNC_SET_ENUM
