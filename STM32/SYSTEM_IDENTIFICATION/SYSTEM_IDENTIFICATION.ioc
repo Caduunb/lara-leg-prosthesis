@@ -1,7 +1,8 @@
 #MicroXplorer Configuration settings - do not modify
 ADC1.Channel-0\#ChannelRegularConversion=ADC_CHANNEL_4
 ADC1.ContinuousConvMode=ENABLE
-ADC1.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,NbrOfConversionFlag,master,ContinuousConvMode,NbrOfConversion
+ADC1.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,NbrOfConversionFlag,master,ContinuousConvMode,NbrOfConversion,InjNumberOfConversion
+ADC1.InjNumberOfConversion=0
 ADC1.NbrOfConversion=1
 ADC1.NbrOfConversionFlag=1
 ADC1.Rank-0\#ChannelRegularConversion=1
@@ -9,8 +10,9 @@ ADC1.SamplingTime-0\#ChannelRegularConversion=ADC_SAMPLETIME_1CYCLE_5
 ADC1.master=1
 FREERTOS.FootprintOK=true
 FREERTOS.HEAP_NUMBER=3
-FREERTOS.IPParameters=Tasks01,FootprintOK,HEAP_NUMBER
-FREERTOS.Tasks01=CurrentRead,3,128,StartTaskCurrentRead,Default,NULL,Dynamic,NULL,NULL;DataLogging,0,128,StartTaskDataLogging,Default,NULL,Dynamic,NULL,NULL;SystemIdentific,3,128,StartTaskSystemIdentification,Default,NULL,Dynamic,NULL,NULL
+FREERTOS.IPParameters=Tasks01,FootprintOK,HEAP_NUMBER,Mutexes01
+FREERTOS.Mutexes01=myMutex01,Dynamic,NULL
+FREERTOS.Tasks01=CurrentRead,3,128,StartTaskCurrentRead,Default,NULL,Dynamic,NULL,NULL;DataLogging,3,128,StartTaskDataLogging,Default,NULL,Dynamic,NULL,NULL;SystemIdentific,3,128,StartTaskSystemIdentification,Default,NULL,Dynamic,NULL,NULL
 File.Version=6
 KeepUserPlacement=false
 Mcu.Family=STM32F1

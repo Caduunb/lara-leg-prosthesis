@@ -25,7 +25,7 @@
 "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3/port.o"
 "Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_3.o"
 "Src/freertos.o"
-"Src/legio.o"
+"Src/legio_sys_id.o"
 "Src/main.o"
 "Src/stm32f1xx_hal_msp.o"
 "Src/stm32f1xx_hal_timebase_tim.o"

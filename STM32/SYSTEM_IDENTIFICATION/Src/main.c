@@ -49,13 +49,14 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "legio.h"
+#include "legio_sys_id.h"
 #include "main.h"
 #include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
@@ -64,9 +65,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define CURRENT_READ_SAMPLE_TIME 50;
-//#define PWM_MAX 12;
-//#define FREQ 72000;
 
 /* USER CODE END PD */
 
@@ -86,11 +84,33 @@ UART_HandleTypeDef huart1;
 
 osThreadId CurrentReadHandle;
 osThreadId DataLoggingHandle;
-//osThreadId SystemIdentificHandle;
+osThreadId SystemIdentificHandle;
+
+//osMutexId myMutex01Handle;
+
 /* USER CODE BEGIN PV */
-int adc_flag;
-int adc_value;
+
+//global variables
 float current_value;
+int adc_offset;
+int dutycycle;
+
+struct system_config{
+	const int FREQ;
+	const int PWM_MAX;
+	const int PWM_SIGNAL_DURATION;
+	const int CURRENT_READ_SAMPLE_TIME;
+	const int LOGGING_SAMPLE_TIME;
+};
+
+
+struct system_config sys_config = {
+    .FREQ = 18,
+    .PWM_MAX = 12,
+    .PWM_SIGNAL_DURATION = 100,
+    .CURRENT_READ_SAMPLE_TIME = 500,
+    .LOGGING_SAMPLE_TIME = 500
+};
 
 /* USER CODE END PV */
 
@@ -103,17 +123,10 @@ static void MX_SPI2_Init(void);
 static void MX_ADC1_Init(void);
 void StartTaskCurrentRead(void const * argument);
 void StartTaskDataLogging(void const * argument);
-//void StartTaskSystemIdentification(void const * argument);
+void StartTaskSystemIdentification(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-    adc_flag = 1;
-	adc_value = HAL_ADC_GetValue(&hadc1);
-	adc_flag = 0;
-
-	//scaled_adc_val = (adc_val/4095)*(3300); //value in mV
-}
 
 /* USER CODE END PFP */
 
@@ -152,15 +165,20 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_TIM2_Init();
+  MX_TIM2_Init(); //see this function for pwm frequency setting
   MX_SPI2_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
-  //pwm_init();
-  HAL_ADC_Start_IT(&hadc1); //adc in interrupt mode
+  write_system_config_to_sd(sys_config.FREQ, sys_config.PWM_MAX, sys_config.PWM_SIGNAL_DURATION, sys_config.CURRENT_READ_SAMPLE_TIME, sys_config.LOGGING_SAMPLE_TIME); //write script definition and system configurations
+  adc_offset = current_sensor_offsetting(); //gets current reading when no current is applied
 
   /* USER CODE END 2 */
+
+  /* Create the mutex(es) */
+  /* definition and creation of myMutex01 */
+//  osMutexDef(myMutex01);
+//  myMutex01Handle = osMutexCreate(osMutex(myMutex01));
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -176,16 +194,16 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of CurrentRead */
-  osThreadDef(CurrentRead, StartTaskCurrentRead, osPriorityRealtime, 0, 128);
+  osThreadDef(CurrentRead, StartTaskCurrentRead, osPriorityNormal, 0, 128);
   CurrentReadHandle = osThreadCreate(osThread(CurrentRead), NULL);
 
   /* definition and creation of DataLogging */
-  osThreadDef(DataLogging, StartTaskDataLogging, osPriorityNormal, 0, 128);
+  osThreadDef(DataLogging, StartTaskDataLogging, osPriorityIdle, 0, 128);
   DataLoggingHandle = osThreadCreate(osThread(DataLogging), NULL);
 
-//  /* definition and creation of SystemIdentific */
-//  osThreadDef(SystemIdentific, StartTaskSystemIdentification, osPriorityRealtime, 0, 128);
-//  SystemIdentificHandle = osThreadCreate(osThread(SystemIdentific), NULL);
+  /* definition and creation of SystemIdentific */
+  osThreadDef(SystemIdentific, StartTaskSystemIdentification, osPriorityRealtime, 0, 128);
+  SystemIdentificHandle = osThreadCreate(osThread(SystemIdentific), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -359,7 +377,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 9;
+  htim2.Init.Prescaler = 35; //pwm set @18khz
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 99;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -481,24 +499,29 @@ static void MX_GPIO_Init(void)
 void StartTaskCurrentRead(void const * argument)
 {
   /* USER CODE BEGIN 5 */
+  int adc_value;
+  float read_voltage;
+  float voltage_offset;
+
+  voltage_offset = (adc_offset)*(3300/4095.0); //voltage offset value
+
+  HAL_ADC_Start(&hadc1); //start adc channel
+
   /* Infinite loop */
 	for(;;)
 	  {
-
-//		  HAL_ADC_Start(&hadc1);
-//		  HAL_ADC_PollForConversion(&hadc1, 100); //wait for conversion
-//		  adc_value = HAL_ADC_GetValue(&hadc1);
-//		  HAL_ADC_Stop(&hadc1);
-		  //current_value = (adc_value)*(3300/4095.0); //value in mV (adc_value - current_offset)*(3300/4095.0);
-		  //current_value = 2*current_value; //multiples by 2 to scale for current division
-		  if (adc_flag == 1){
-			  current_value = adc_value;
-		  }
-		  write_string_to_sd("Current reader OK");
-		  osDelay(25);
-	      //osDelay(CURRENT_READ_SAMPLE_TIME); //read current every 50ms
+//		if(xSemaphoreTake( myMutex01Handle,( TickType_t) 10 ) == pdTRUE)
+//		{
+		HAL_ADC_PollForConversion(&hadc1, 100); //wait for conversion
+		adc_value = HAL_ADC_GetValue(&hadc1);
+		read_voltage = (adc_value)*(3300/4095.0); //value in mV
+		current_value = (read_voltage - voltage_offset)/(185); //result in A
+		current_value = 2*current_value; //multiples by 2 to scale for current division
+		  //xTaskNotify(DataLoggingHandle, 0x01, eSetBits);
+		//}
+		osDelay(sys_config.CURRENT_READ_SAMPLE_TIME); //read current every 50ms
 	  }
-  /* USER CODE END 5 */ 
+  /* USER CODE END 5 */
 }
 
 /* USER CODE BEGIN Header_StartTaskDataLogging */
@@ -511,13 +534,19 @@ void StartTaskCurrentRead(void const * argument)
 void StartTaskDataLogging(void const * argument)
 {
   /* USER CODE BEGIN StartTaskDataLogging */
+  //uint32_t notifValue;
   /* Infinite loop */
-	float test; test = 1.42;
 	for(;;)
 	{
-		 write_current(current_value);
-		 write_string_to_sd("Data logger OK");
-		 osDelay(50);
+	  //xTaskNotifyWait(pdFALSE, 0xFF, &notifValue, portMAX_DELAY);
+//	  if((notifValue & 0x01) !=0x00){
+//		  if( xSemaphoreTake( myMutex01Handle,( TickType_t) 10 ) == pdTRUE)
+//		  	  {
+		         write_current(current_value);
+		  		 //xSemaphoreGive(myMutex01Handle);
+//		  	  }
+//	  }
+	  osDelay(sys_config.LOGGING_SAMPLE_TIME);
 	}
   /* USER CODE END StartTaskDataLogging */
 }
@@ -529,28 +558,28 @@ void StartTaskDataLogging(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_StartTaskSystemIdentification */
-
-/*void StartTaskSystemIdentification(void const * argument)
+void StartTaskSystemIdentification(void const * argument)
 {
-	/*USER CODE BEGIN StartTaskSystemIdentification* /
-	int i, dutycycle;
-	float vmedio, tau, FREQ, PWM_MAX;
-	vmedio = 0;
-	FREQ = 72000;
-	PWM_MAX = 12;
+ /* USER CODE BEGIN StartTaskSystemIdentification */
+
+	float tau, v_avg;
+
+	v_avg = 0;
+	pwm_init();
+
 	// Infinite loop
-	while(1)
+	for(;;)
 	{
-		tau = (vmedio)/(PWM_MAX*FREQ);
-		dutycycle = (int)(tau*FREQ*100);
-		pwm_set_duty_cycle(dutycycle);
-		osDelay(100);					// signal stays either high or low for 100ms
-		if(vmedio == 0) {vmedio = 5;}
-		else {vmedio = 0;}
+		tau = (v_avg)/((sys_config.PWM_MAX)*(sys_config.FREQ));
+		dutycycle = (int)(tau*(sys_config.FREQ)*100); //duty cycle as percentage
+	    pwm_set_duty_cycle(dutycycle);
+	    osDelay(sys_config.PWM_SIGNAL_DURATION); // signal stays either high or low for PWM_SIGNAL_DURATION
+		if(v_avg == 0) {v_avg = 5;}
+		else {v_avg = 0;}
 	}
 
-   /*USER CODE END StartTaskSystemIdentification* /
-}*/
+  /* USER CODE END StartTaskSystemIdentification */
+}
 
 /**
   * @brief  Period elapsed callback in non blocking mode
