@@ -1,7 +1,7 @@
 /*Library file for communicating with AMT20 encoder.
 This file implements function definitions only and must be added to the "Inc" folder of the STM32 project.*/
+#include <legio.h>
 #include "stm32f1xx_hal.h"
-#include "miscellaneous.h"
 
 char encoder_transmit_command(uint8_t command); //transmit a command to execute action and get response from sensor
 

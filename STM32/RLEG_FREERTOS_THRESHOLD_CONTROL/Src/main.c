@@ -55,7 +55,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "encoder.h"
-#include "miscellaneous.h"
+#include "legio.h"
 #include <time.h>
 
 /* USER CODE END Includes */
@@ -91,21 +91,20 @@ TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart1;
 
-osThreadId CurrentReadHandle;
+//osThreadId CurrentReadHandle;
 osThreadId DataLoggingHandle;
 osThreadId EncoderReadingsHandle;
-osThreadId ControlActuatorHandle;
+//osThreadId ControlActuatorHandle;
 /* USER CODE BEGIN PV */
 
 float encoder_position;
 int adc_value;
-float current_value, current_offset;
-float abs_acc;
+float current_value, current_offset, read_voltage, voltage_offset;
 int state;
 float act_lvl, k;
-float theta_0, theta_1 = 0, vel = 0;
-time_t start_time;
-double current_time;
+float theta_0, theta_1, vel;
+int start_time, current_time;
+//time_t start_time;
 
 /* USER CODE END PV */
 
@@ -116,30 +115,12 @@ static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_ADC1_Init(void);
-void StartTaskCurrentRead(void const * argument);
+//void StartTaskCurrentRead(void const * argument);
 void StartTaskDataLogging(void const * argument);
 void StartTaskEncoderReadings(void const * argument);
-void StartTaskActuator(void const * argument);
+//void StartTaskActuator(void const * argument);
 
 /* USER CODE BEGIN PFP */
-
-int read_current_sensor(){ //reads current sensor in polling mode for offsetting
-    HAL_ADC_PollForConversion(&hadc1, 100); //wait for conversion
-	adc_value = HAL_ADC_GetValue(&hadc1);
-	return adc_value;
-}
-
-void current_sensor_offsetting(){
-	int i = 0;
-	float avg_current = 0; //non-scaled value. value is between 0 and 4095
-
-	for(i=0; i<100; i++){
-		avg_current += read_current_sensor(); //accumulates readings
-		HAL_Delay(10); //10ms in between readings
-	}
-	current_offset = (avg_current/100.0); //read value when current is 0
-
-}
 
 /* USER CODE END PFP */
 
@@ -155,7 +136,6 @@ void current_sensor_offsetting(){
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  start_time = time(0);
 
   /* USER CODE END 1 */
 
@@ -183,18 +163,17 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
+//  current_offset = 0;
+//  //current_sensor_offsetting(); //reads value when current is equal to 0
+//
+
   //initialization function
   encoder_init();
-  current_offset = 0;
-  //current_sensor_offsetting(); //reads value when current is equal to 0
-
   //zeroing function
   encoder_set_zero_pos(); //zeroing encoder if necessary
 
-  state = 0; //initial control state
+//  state = 0; //initial control state
 
-  encoder_read_pos(&encoder_position); //reads initial position
-  theta_1 = encoder_position;
 
 
   /* USER CODE END 2 */
@@ -213,9 +192,9 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of CurrentRead */
-  osThreadDef(CurrentRead, StartTaskCurrentRead, osPriorityRealtime, 0, 128);
-  CurrentReadHandle = osThreadCreate(osThread(CurrentRead), NULL);
-
+//  osThreadDef(CurrentRead, StartTaskCurrentRead, osPriorityRealtime, 0, 128);
+//  CurrentReadHandle = osThreadCreate(osThread(CurrentRead), NULL);
+//
   /* definition and creation of DataLogging */
   osThreadDef(DataLogging, StartTaskDataLogging, osPriorityNormal, 0, 128);
   DataLoggingHandle = osThreadCreate(osThread(DataLogging), NULL);
@@ -223,10 +202,10 @@ int main(void)
   /* definition and creation of EncoderReadings */
   osThreadDef(EncoderReadings, StartTaskEncoderReadings, osPriorityRealtime, 0, 128);
   EncoderReadingsHandle = osThreadCreate(osThread(EncoderReadings), NULL);
-
-  /* definition and creation of ControlActuator */
-  osThreadDef(ControlActuator, StartTaskActuator, osPriorityRealtime, 0, 128);
-  ControlActuatorHandle = osThreadCreate(osThread(ControlActuator), NULL);
+//
+//  /* definition and creation of ControlActuator */
+//  osThreadDef(ControlActuator, StartTaskActuator, osPriorityRealtime, 0, 128);
+//  ControlActuatorHandle = osThreadCreate(osThread(ControlActuator), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -244,6 +223,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
     /* USER CODE END WHILE */
@@ -519,98 +499,108 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_StartTaskCurrentRead */
-void StartTaskCurrentRead(void const * argument)
-{
-
-  /* USER CODE BEGIN 5 */
-  /* Infinite loop */
-  for(;;)
-  {
-	  HAL_ADC_PollForConversion(&hadc1, 100); //wait for conversion
-	  adc_value = HAL_ADC_GetValue(&hadc1);
-	  current_value = (adc_value - current_offset)*(3300/4095.0); //value in mV
-	  current_value = 2*current_value; //multiples by 2 to scale for current division
-      osDelay(CURRENT_READ_SAMPLE_TIME); //read current every 50ms
-  }
-  /* USER CODE END 5 */ 
-}
-
-/* USER CODE BEGIN Header_StartTaskDataLogging */
-/**
-* @brief Function implementing the DataLogging thread.
-* @param argument: Not used
-* @retval None
-*/
+//void StartTaskCurrentRead(void const * argument)
+//{
+//
+//  /* USER CODE BEGIN 5 */
+//  HAL_ADC_Start(&hadc1); //start adc channel
+//
+//  /* Infinite loop */
+//  for(;;)
+//  {
+//	  HAL_ADC_PollForConversion(&hadc1, 100); //wait for conversion
+//	  adc_value = HAL_ADC_GetValue(&hadc1);
+//	  read_voltage = (adc_value)*(3300/4095.0); //value in mV
+//	  current_value = (read_voltage - voltage_offset)/(185); //result in A
+//	  current_value = 2*current_value; //multiples by 2 to scale for current division
+//    osDelay(CURRENT_READ_SAMPLE_TIME); //read current every 50ms
+//  }
+//  /* USER CODE END 5 */
+//}
+//
+///* USER CODE BEGIN Header_StartTaskDataLogging */
+///**
+//* @brief Function implementing the DataLogging thread.
+//* @param argument: Not used
+//* @retval None
+//*/
 /* USER CODE END Header_StartTaskDataLogging */
 void StartTaskDataLogging(void const * argument)
 {
   /* USER CODE BEGIN StartTaskDataLogging */
   /* Infinite loop */
+  int i = 0; //to save iteration counting
+
   for(;;)
   {
-    current_time = difftime(time(0), start_time); //current time in s
-	write_sampled_data(current_time, state, encoder_position, current_value);
-	//write_encoder_data(encoder_position);
-    osDelay(DATA_LOGGING_SAMPLE_TIME); //50ms delay
+	 current_time = i*(DATA_LOGGING_SAMPLE_TIME);
+	 i++;
+	 write_sampled_data(current_time, encoder_position, vel, 0, 0);//, state, current_value);
+     osDelay(DATA_LOGGING_SAMPLE_TIME); //50ms delay
   }
   /* USER CODE END StartTaskDataLogging */
 }
 
-/* USER CODE BEGIN Header_StartTaskEncoderReadings */
-/**
-* @brief Function implementing the EncoderReadings thread.
-* @param argument: Not used
-* @retval None
-*/
+///* USER CODE BEGIN Header_StartTaskEncoderReadings */
+///**
+//* @brief Function implementing the EncoderReadings thread.
+//* @param argument: Not used
+//* @retval None
+//*/
 /* USER CODE END Header_StartTaskEncoderReadings */
 void StartTaskEncoderReadings(void const * argument)
 {
   /* USER CODE BEGIN StartTaskEncoderReadings */
+  theta_0 = 0;
+  encoder_read_pos(&encoder_position);
+  theta_1 = encoder_position;
   /* Infinite loop */
   for(;;)
   {
 	 theta_0 = theta_1;
+	 encoder_read_pos(&encoder_position);
 	 theta_1 = encoder_position; //new angle reading
-	 /* Calculates velocity */
-	 vel = (theta_1 - theta_0)/(ENCODER_SAMPLE_TIME*0.001); //acc in degrees/s
+	 /* Calculates angular velocity */
+	 vel = (theta_1 - theta_0)/(ENCODER_SAMPLE_TIME*0.001); //ang velocity in degrees/s
      osDelay(ENCODER_SAMPLE_TIME); //50ms delay
+
   }
   /* USER CODE END StartTaskEncoderReadings */
 }
 
-/* USER CODE BEGIN Header_StartTaskActuator */
-/**
-* @brief Function implementing the ControlActuator thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTaskActuator */
-void StartTaskActuator(void const * argument)
-{
-  /* USER CODE BEGIN StartTaskActuator */
-  /* Infinite loop */
-  for(;;)
-  {
-	  /* Checks threshold */
-	  if(((vel < LOWER_EPSILON) || (((-1)*vel) < LOWER_EPSILON) ) && state==1){
-		state = 0; // changes to no actuation state
-		k = 0;
-	  }
-
-	  else if (((vel > UPPER_EPSILON) || (((-1)*vel) > UPPER_EPSILON)) && state==0){
-		state = 1; // changes to state with actuation
-		k = CONST_DUTY_CYCLE;
-	  }
-
-	  act_lvl = k;
-	  LED_actuation_mode(state);
-	  pwm_set_duty_cycle(act_lvl); //set pwm duty cycle
-
-
-    osDelay(CONTROL_SAMPLE_TIME); // delay
-  }
-  /* USER CODE END StartTaskActuator */
-}
+///* USER CODE BEGIN Header_StartTaskActuator */
+///**
+//* @brief Function implementing the ControlActuator thread.
+//* @param argument: Not used
+//* @retval None
+//*/
+///* USER CODE END Header_StartTaskActuator */
+//void StartTaskActuator(void const * argument)
+//{
+//  /* USER CODE BEGIN StartTaskActuator */
+//  /* Infinite loop */
+//  for(;;)
+//  {
+//	  /* Checks threshold */
+//	  if(((vel < LOWER_EPSILON) || (((-1)*vel) < LOWER_EPSILON) ) && state==1){
+//		state = 0; // changes to no actuation state
+//		k = 0;
+//	  }
+//
+//	  else if (((vel > UPPER_EPSILON) || (((-1)*vel) > UPPER_EPSILON)) && state==0){
+//		state = 1; // changes to state with actuation
+//		k = CONST_DUTY_CYCLE;
+//	  }
+//
+//	  act_lvl = k;
+//	  LED_actuation_mode(state);
+//	  pwm_set_duty_cycle(act_lvl); //set pwm duty cycle
+//
+//
+//    osDelay(CONTROL_SAMPLE_TIME); // delay
+//  }
+//  /* USER CODE END StartTaskActuator */
+//}
 
 /**
   * @brief  Period elapsed callback in non blocking mode

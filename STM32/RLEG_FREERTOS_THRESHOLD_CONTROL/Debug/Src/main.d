@@ -44,8 +44,7 @@ Src/main.o: ../Src/main.c \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Middlewares/Third_Party/FreeRTOS/Source/include/timers.h \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/encoder.h \
- C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/miscellaneous.h \
- C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/miscellaneous.h
+ C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/legio.h
 
 C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/main.h:
 
@@ -137,6 +136,4 @@ C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Middlewares/Thi
 
 C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/encoder.h:
 
-C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/miscellaneous.h:
-
-C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/miscellaneous.h:
+C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/legio.h:

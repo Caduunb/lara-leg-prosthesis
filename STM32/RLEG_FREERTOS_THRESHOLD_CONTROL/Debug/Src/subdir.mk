@@ -6,8 +6,8 @@
 C_SRCS += \
 ../Src/encoder.c \
 ../Src/freertos.c \
+../Src/legio.c \
 ../Src/main.c \
-../Src/miscellaneous.c \
 ../Src/stm32f1xx_hal_msp.c \
 ../Src/stm32f1xx_hal_timebase_tim.c \
 ../Src/stm32f1xx_it.c \
@@ -16,8 +16,8 @@ C_SRCS += \
 OBJS += \
 ./Src/encoder.o \
 ./Src/freertos.o \
+./Src/legio.o \
 ./Src/main.o \
-./Src/miscellaneous.o \
 ./Src/stm32f1xx_hal_msp.o \
 ./Src/stm32f1xx_hal_timebase_tim.o \
 ./Src/stm32f1xx_it.o \
@@ -26,8 +26,8 @@ OBJS += \
 C_DEPS += \
 ./Src/encoder.d \
 ./Src/freertos.d \
+./Src/legio.d \
 ./Src/main.d \
-./Src/miscellaneous.d \
 ./Src/stm32f1xx_hal_msp.d \
 ./Src/stm32f1xx_hal_timebase_tim.d \
 ./Src/stm32f1xx_it.d \

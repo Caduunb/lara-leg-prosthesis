@@ -1,5 +1,5 @@
-Src/miscellaneous.o: ../Src/miscellaneous.c \
- C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/miscellaneous.h \
+Src/legio.o: ../Src/legio.c \
+ C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/legio.h \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/stm32f1xx_hal_conf.h \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h \
@@ -27,7 +27,7 @@ Src/miscellaneous.o: ../Src/miscellaneous.c \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 
-C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/miscellaneous.h:
+C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Inc/legio.h:
 
 C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_ENCODER/Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:
 
