@@ -52,11 +52,13 @@
 #include "main.h"
 #include "cmsis_os.h"
 
-/* Private includes ----------------------------------------------------------*/
+/* Private includes --------------
+ * --------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "encoder.h"
 #include "legio.h"
 #include <time.h>
+#include <stdlib.h> //for abs function
 
 /* USER CODE END Includes */
 
@@ -67,13 +69,13 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LOWER_EPSILON 10
-#define UPPER_EPSILON 20
+#define LOWER_EPSILON 60
+#define UPPER_EPSILON 80
 #define CONST_DUTY_CYCLE 20
-#define ENCODER_SAMPLE_TIME 50
-#define DATA_LOGGING_SAMPLE_TIME 50
-#define CURRENT_READ_SAMPLE_TIME 50
-#define CONTROL_SAMPLE_TIME 50
+#define ENCODER_SAMPLE_TIME 100
+#define DATA_LOGGING_SAMPLE_TIME 100
+#define CURRENT_READ_SAMPLE_TIME 100
+#define CONTROL_SAMPLE_TIME 100
 
 /* USER CODE END PD */
 
@@ -94,7 +96,7 @@ UART_HandleTypeDef huart1;
 //osThreadId CurrentReadHandle;
 osThreadId DataLoggingHandle;
 osThreadId EncoderReadingsHandle;
-//osThreadId ControlActuatorHandle;
+osThreadId ControlActuatorHandle;
 /* USER CODE BEGIN PV */
 
 float encoder_position;
@@ -104,7 +106,6 @@ int state;
 float act_lvl, k;
 float theta_0, theta_1, vel;
 int start_time, current_time;
-//time_t start_time;
 
 /* USER CODE END PV */
 
@@ -118,7 +119,7 @@ static void MX_ADC1_Init(void);
 //void StartTaskCurrentRead(void const * argument);
 void StartTaskDataLogging(void const * argument);
 void StartTaskEncoderReadings(void const * argument);
-//void StartTaskActuator(void const * argument);
+void StartTaskActuator(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -172,7 +173,7 @@ int main(void)
   //zeroing function
   encoder_set_zero_pos(); //zeroing encoder if necessary
 
-//  state = 0; //initial control state
+  state = 0; //initial control state
 
 
 
@@ -202,10 +203,10 @@ int main(void)
   /* definition and creation of EncoderReadings */
   osThreadDef(EncoderReadings, StartTaskEncoderReadings, osPriorityRealtime, 0, 128);
   EncoderReadingsHandle = osThreadCreate(osThread(EncoderReadings), NULL);
-//
-//  /* definition and creation of ControlActuator */
-//  osThreadDef(ControlActuator, StartTaskActuator, osPriorityRealtime, 0, 128);
-//  ControlActuatorHandle = osThreadCreate(osThread(ControlActuator), NULL);
+
+  /* definition and creation of ControlActuator */
+  osThreadDef(ControlActuator, StartTaskActuator, osPriorityRealtime, 0, 128);
+  ControlActuatorHandle = osThreadCreate(osThread(ControlActuator), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -530,12 +531,13 @@ void StartTaskDataLogging(void const * argument)
   /* USER CODE BEGIN StartTaskDataLogging */
   /* Infinite loop */
   int i = 0; //to save iteration counting
+  current_time = 0;
 
   for(;;)
   {
-	 current_time = i*(DATA_LOGGING_SAMPLE_TIME);
-	 i++;
-	 write_sampled_data(current_time, encoder_position, vel, 0, 0);//, state, current_value);
+//	 current_time = i*(DATA_LOGGING_SAMPLE_TIME);
+//	 i++;
+	 write_sampled_data(current_time, encoder_position, vel, state, 0);//, state, current_value);
      osDelay(DATA_LOGGING_SAMPLE_TIME); //50ms delay
   }
   /* USER CODE END StartTaskDataLogging */
@@ -554,6 +556,7 @@ void StartTaskEncoderReadings(void const * argument)
   theta_0 = 0;
   encoder_read_pos(&encoder_position);
   theta_1 = encoder_position;
+  float v = 0;
   /* Infinite loop */
   for(;;)
   {
@@ -561,46 +564,50 @@ void StartTaskEncoderReadings(void const * argument)
 	 encoder_read_pos(&encoder_position);
 	 theta_1 = encoder_position; //new angle reading
 	 /* Calculates angular velocity */
-	 vel = (theta_1 - theta_0)/(ENCODER_SAMPLE_TIME*0.001); //ang velocity in degrees/s
+	 v = (theta_1 - theta_0)/(ENCODER_SAMPLE_TIME*0.001); //ang velocity in degrees/s
+	 if (v<0){vel = -v;}
+	 else{vel = v;}
      osDelay(ENCODER_SAMPLE_TIME); //50ms delay
 
   }
   /* USER CODE END StartTaskEncoderReadings */
 }
 
-///* USER CODE BEGIN Header_StartTaskActuator */
-///**
-//* @brief Function implementing the ControlActuator thread.
-//* @param argument: Not used
-//* @retval None
-//*/
-///* USER CODE END Header_StartTaskActuator */
-//void StartTaskActuator(void const * argument)
-//{
-//  /* USER CODE BEGIN StartTaskActuator */
-//  /* Infinite loop */
-//  for(;;)
-//  {
-//	  /* Checks threshold */
-//	  if(((vel < LOWER_EPSILON) || (((-1)*vel) < LOWER_EPSILON) ) && state==1){
-//		state = 0; // changes to no actuation state
-//		k = 0;
-//	  }
-//
-//	  else if (((vel > UPPER_EPSILON) || (((-1)*vel) > UPPER_EPSILON)) && state==0){
-//		state = 1; // changes to state with actuation
-//		k = CONST_DUTY_CYCLE;
-//	  }
-//
-//	  act_lvl = k;
+/* USER CODE BEGIN Header_StartTaskActuator */
+/**
+* @brief Function implementing the ControlActuator thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTaskActuator */
+void StartTaskActuator(void const * argument)
+{
+  /* USER CODE BEGIN StartTaskActuator */
+  pwm_init(); //initialize pwm channel
+
+  /* Infinite loop */
+  for(;;)
+  {
+	  /* Checks threshold */
+	  if((vel < LOWER_EPSILON)  && state==1){
+		state = 0; // changes to no actuation state
+		k = 0;
+	  }
+
+	  else if ((vel > UPPER_EPSILON) && state==0){
+		state = 1; // changes to state with actuation
+		k = CONST_DUTY_CYCLE;
+	  }
+
+	  act_lvl = k;
 //	  LED_actuation_mode(state);
-//	  pwm_set_duty_cycle(act_lvl); //set pwm duty cycle
-//
-//
-//    osDelay(CONTROL_SAMPLE_TIME); // delay
-//  }
-//  /* USER CODE END StartTaskActuator */
-//}
+	  pwm_set_duty_cycle(act_lvl); //set pwm duty cycle
+
+
+    osDelay(CONTROL_SAMPLE_TIME); // delay
+  }
+  /* USER CODE END StartTaskActuator */
+}
 
 /**
   * @brief  Period elapsed callback in non blocking mode

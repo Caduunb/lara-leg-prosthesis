@@ -26,20 +26,21 @@ void write_string_to_sd(char string[]){ //writes string
 
 void write_sampled_data(int time_stamp, int enc_data, float vel, int state, int current){
 	char buffer[100];
-	int int_vel, dec_vel; //integer and decimal parts of angular velocity
+	int int_vel; //integer and decimal parts of angular velocity
+	int dec_vel;
 
 	write_float(vel, &int_vel, &dec_vel);
 
 	if(dec_vel <10){
-		sprintf(buffer, "[%d] angle: %d, vel: %d.0%d\r\n", time_stamp, enc_data, int_vel, dec_vel);
+		sprintf(buffer, "[%d] angle: %d, vel: %d.0%d, state: %d\r\n", time_stamp, enc_data, int_vel, dec_vel, state);
 	}
 	else{
-		sprintf(buffer, "[%d] angle: %d, vel: %d.%d\r\n", time_stamp, enc_data, int_vel, dec_vel);
+		sprintf(buffer, "[%d] angle: %d, vel: %d.%d, state: %d\r\n", time_stamp, enc_data, int_vel, dec_vel, state);
 	}
 
 	//sprintf(buffer, "[%d] angle: %d, vel: %d, state: %d, current: %.2f", time_stamp, enc_data, state, current);
 	//sprintf(buffer, "[%d] angle: %d, state: %d, current: %.2f", time_stamp, enc_data, state, current);
-	HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 30);
+	HAL_UART_Transmit(&huart1, (uint8_t *)buffer, strlen(buffer), 70);
 }
 
 //pwm functions
@@ -48,7 +49,7 @@ void pwm_init(){
 }
 
 void pwm_set_duty_cycle(int val){
-	if(val>0 && val<100){ //duty cycle in percentage
+	if(val>=0 && val<100){ //duty cycle in percentage
 		TIM2->CCR2 = val; //duty cycle value. Max configuration according to ARR register.
 	}
 }

@@ -75,19 +75,19 @@ void encoder_read_pos(float *position){ //reads encoder position
   uint16_t data;
 
   command_rec = encoder_transmit_command(READ_POS); // sends read position command and tries to read an echo
-  HAL_Delay(20); //change delay back to 250ms if necessary
+  HAL_Delay(5); //change delay back to 20ms if necessary
   command_rec = encoder_transmit_command(NOP_A5);
-  HAL_Delay(20);
+  HAL_Delay(5);
   while(command_rec != READ_POS){  // echo of the command
 	  command_rec = encoder_transmit_command(NOP_A5); // keep sending nop commands and read answer
-     HAL_Delay(20);
+     HAL_Delay(5);
   }
   buffer = encoder_get_data(NOP_A5); // send first nop command after received the 0x10 echo and get msb to data_rec
   data = (buffer<<8) | 0x00; // shitf msb
-  HAL_Delay(20);
+  HAL_Delay(5);
   buffer = encoder_get_data(NOP_A5); // send second nop command after received the 0x10 echo and get lsb to data_rec
   data = data | buffer;
-  HAL_Delay(20); // delay in-between reads
+  HAL_Delay(5); // delay in-between reads
 
   *position = 360 - ((data)*360)/4096.0; //data conversion to angle in the possible direction of movement
 
