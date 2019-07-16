@@ -87,6 +87,7 @@ UART_HandleTypeDef huart1;
 osThreadId CurrentReadHandle;
 osThreadId DataLoggingHandle;
 osThreadId SetPWMHandle;
+osMutexId MutexHandle;
 /* USER CODE BEGIN PV */
 
 float v_avg;
@@ -148,7 +149,6 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
-  //get_pwm_frequency(&pwm_frequency); //calculates frequency based on prescaler settings
   //write_pwm_freq_to_sd(); //change accordingly
 
   /* USER CODE END 2 */
@@ -169,7 +169,7 @@ int main(void)
   /* definition and creation of CurrentRead */
   osThreadDef(CurrentRead, StartTaskCurrentRead, osPriorityRealtime, 0, 128);
   CurrentReadHandle = osThreadCreate(osThread(CurrentRead), NULL);
-//
+
   /* definition and creation of DataLogging */
   osThreadDef(DataLogging, StartTaskDataLogging, osPriorityRealtime, 0, 128);
   DataLoggingHandle = osThreadCreate(osThread(DataLogging), NULL);
@@ -196,8 +196,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -417,9 +415,11 @@ void StartTaskCurrentRead(void const * argument)
   /* Infinite loop */
   for(;;)
   {
+	xSemaphoreTake(MutexHandle, portMAX_DELAY);
 	HAL_ADC_PollForConversion(&hadc1, 50); //wait for conversion
 	adc_value = HAL_ADC_GetValue(&hadc1);
-  osDelay(CURRENT_READ_SAMPLE_TIME);
+	xSemaphoreGive(MutexHandle);
+    osDelay(CURRENT_READ_SAMPLE_TIME);
   }
   /* USER CODE END 5 */
 }
@@ -437,8 +437,8 @@ void StartTaskDataLogging(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	write_sampled_data_current_sensor(v_avg, dutycycle, adc_value);
-  osDelay(DATA_LOGGING_SAMPLE_TIME);
+	write_sampled_data(v_avg, dutycycle, adc_value);
+    osDelay(DATA_LOGGING_SAMPLE_TIME);
   }
   /* USER CODE END StartTaskDataLogging */
 }
@@ -473,7 +473,9 @@ void StartTaskSetPWM(void const * argument)
 				i++;
 			}
 	}
+	xSemaphoreTake(MutexHandle, portMAX_DELAY);
 	set_avg_voltage(v_avg, &dutycycle);
+	xSemaphoreGive(MutexHandle);
   osDelay(SET_PWM_SAMPLE_TIME);
 
   }
