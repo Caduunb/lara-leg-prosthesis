@@ -38,36 +38,58 @@
   */
 /* USER CODE END Header */
 
-/* Includes */
+/* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-/* Private typedef   */
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
 
-/* Private define    */
+/* USER CODE END Includes */
 
-/* Private macro     */
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
 
-/* Private variables */
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
-// USER CODE PV
-uint16_t adc_value;
-float scaled_adc_value; //read value in mV
+/* USER CODE BEGIN PV */
 
+/* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
+/* USER CODE BEGIN PFP */
 
-// USER CODE BEGIN PFP
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-	adc_value = HAL_ADC_GetValue(&hadc1);
-	scaled_adc_value = (adc_value/4095)*(3300); //value in mV
-}
+
+/* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
 
+uint16_t adc_val; //read adc value is a 12-bit value
+
+/*Uncomment the function below for adc read using interrupt mode.
+ * The HAL_ADC_ConvCpltCallback function is called whenever a new conversion has finished.
+ */
+/*void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+	adc_val = HAL_ADC_GetValue(&hadc1);
+}*/
+
+/* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
@@ -98,20 +120,28 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ADC1_Init();
-  // USER CODE BEGIN 2
 
-  HAL_ADC_Start_IT(&hadc1); //adc in interrupt mode
+  /* USER CODE BEGIN 2 */
 
-  // USER CODE END 2
+  //HAL_ADC_Start_IT(&hadc1); //star ADC in interrupt mode. Uncomment this if using it in this mode.
 
-/* Infinite loop */
+  HAL_ADC_Start(&hadc1);  //start ADC channel. Comment this if using ADC read in interrupt mode.
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
   while (1)
   {
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, 0); 	// Led acende
-    HAL_Delay(250);
-    HAL_GPIO_WritePin (GPIOC, GPIO_PIN_13, 1); 	// Led apaga
-    HAL_Delay(500);
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+
+	HAL_ADC_PollForConversion(&hadc1, 150); //Wait for ADC conversion
+	adc_val = HAL_ADC_GetValue(&hadc1);
+	HAL_Delay(500);
   }
+  /* USER CODE END 3 */
 }
 
 /**
@@ -192,7 +222,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5; //ADC_SampleTime_1Cycles5: Sample time equal to 1.5 cycles. ADC conversion time = 12cycles. Total time = 13.5 cycles.
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -250,4 +280,4 @@ void assert_failed(uint8_t *file, uint32_t line)
 }
 #endif /* USE_FULL_ASSERT */
 
-/************************ (C) COPYRIGHT STMicroelectronics *********/
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
