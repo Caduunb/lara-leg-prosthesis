@@ -6,10 +6,11 @@ PWM frequency is set as 72 kHz as standard, by setting 'htim2.Init.Prescaler' to
 
 PWM_frequency = (TIMER_frequency/PWM_steps)/(htim2.Init.Prescaler+1)
 
-PWM steps can be changed accordingly by setting the 'htim2.Init.Period' variable, as:
-
+PWM steps (steps used in dutycycle definition) can be changed accordingly by setting the 'htim2.Init.Period' variable, as:
  
 PWM_steps = htim2.Init.Period + 1
+
+This program defines 100 PWM steps, then, dutycycle resolution is 1 (goes from 0 to 100 in steps of 1).
 
 In the program you can generate a PWM signal with dutycycle set according to the average voltage output value. The dutycycle is set by the CCR register of the used TIMER, as in:
 
