@@ -66,13 +66,23 @@ TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
 
+int dutycycle;
+float v_avg;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
+
 /* USER CODE BEGIN PFP */
+
+void pwm_set_duty_cycle(int val){
+	if(val>=0 && val<100){ //duty cycle in percentage
+		TIM2->CCR2 = val; //duty cycle value. Max configuration according to ARR register.
+	}
+}
 
 /* USER CODE END PFP */
 
@@ -113,16 +123,17 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
 
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2); // pwm no timer2 e no canal 2 (PA1)
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2); // Start pwm channel on TIMER2 and CHANNEL2 (PA1)
 
-  TIM2->CCR2 = 70; //valor de duty cycle. Config max de acordo com ARR*/
+  v_avg = 5; //average voltage definition
+
+  dutycycle = (int)((v_avg/12)*100); //duty cycle set as percentage and based on v_avg value
+  pwm_set_duty_cycle(dutycycle); //apply dutycycle
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-
   while (1)
   {
     /* USER CODE END WHILE */
@@ -189,7 +200,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 9;
+  htim2.Init.Prescaler = 9; //to change pwm frequency, change prescaler value accordingly. Max value of 65535
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 99;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -245,22 +256,12 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
-
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PA7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
