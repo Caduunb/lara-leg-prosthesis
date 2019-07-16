@@ -42,6 +42,7 @@ Src/main.o: ../Src/main.c \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_THRESHOLD_CONTROL/Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_THRESHOLD_CONTROL/Middlewares/Third_Party/FreeRTOS/Source/include/timers.h \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_THRESHOLD_CONTROL/Inc/encoder.h \
+ C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_THRESHOLD_CONTROL/Inc/legio.h \
  C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_THRESHOLD_CONTROL/Inc/legio.h
 
 C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_THRESHOLD_CONTROL/Inc/main.h:
@@ -129,5 +130,7 @@ C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_THRESHOLD_CONTROL/Middl
 C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_THRESHOLD_CONTROL/Middlewares/Third_Party/FreeRTOS/Source/include/timers.h:
 
 C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_THRESHOLD_CONTROL/Inc/encoder.h:
+
+C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_THRESHOLD_CONTROL/Inc/legio.h:
 
 C:/Users/lemos/Documents/stm32projects/NEW/RLEG_FREERTOS_THRESHOLD_CONTROL/Inc/legio.h:
