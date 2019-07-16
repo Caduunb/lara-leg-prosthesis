@@ -1,4 +1,4 @@
-/*Miscellaneous library file. This file contains diverse useful functions for the RLEG project.
+/*Input/Output RLEG library for STM32. Implements useful functions.
 This file implements function definitions only and must be added to the "Inc" folder of the STM32 project.*/
 
 #include "stm32f1xx_hal.h"
@@ -8,7 +8,7 @@ void write_system_config_to_sd(); //writes system configuration
 
 void write_string_to_sd(char string[]); //receives string that is transmitted via UART
 
-void write_sampled_data(int time_stamp, int enc_data, float vel, int state, int current); //writes parameters of interest
+void write_sampled_data(int enc_data, float vel, int state); //writes parameters of interest
 
 void pwm_init(); //initializes pwm channel
 

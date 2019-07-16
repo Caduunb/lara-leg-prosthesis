@@ -6,41 +6,41 @@
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2019 STMicroelectronics International N.V. 
+  * Copyright (c) 2019 STMicroelectronics International N.V.
   * All rights reserved.
   *
-  * Redistribution and use in source and binary forms, with or without 
+  * Redistribution and use in source and binary forms, with or without
   * modification, are permitted, provided that the following conditions are met:
   *
-  * 1. Redistribution of source code must retain the above copyright notice, 
+  * 1. Redistribution of source code must retain the above copyright notice,
   *    this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright notice,
   *    this list of conditions and the following disclaimer in the documentation
   *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other 
-  *    contributors to this software may be used to endorse or promote products 
+  * 3. Neither the name of STMicroelectronics nor the names of other
+  *    contributors to this software may be used to endorse or promote products
   *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this 
+  * 4. This software, including modifications and/or derivative works of this
   *    software, must execute solely and exclusively on microcontroller or
   *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under 
-  *    this license is void and will automatically terminate your rights under 
-  *    this license. 
+  * 5. Redistribution and use of this software other than as permitted under
+  *    this license is void and will automatically terminate your rights under
+  *    this license.
   *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT
+  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
   * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT
   * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
   * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
   * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
@@ -52,13 +52,11 @@
 #include "main.h"
 #include "cmsis_os.h"
 
-/* Private includes --------------
- * --------------------------------------------*/
+/* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "encoder.h"
 #include "legio.h"
-#include <time.h>
-#include <stdlib.h> //for abs function
+#include <time.h> //use this to get time stamp. still needs implementation
 
 /* USER CODE END Includes */
 
@@ -69,12 +67,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LOWER_EPSILON 60
-#define UPPER_EPSILON 80
+#define LOWER_OMEGA 60
+#define UPPER_OMEGA 80
 #define CONST_DUTY_CYCLE 20
 #define ENCODER_SAMPLE_TIME 100
 #define DATA_LOGGING_SAMPLE_TIME 100
-#define CURRENT_READ_SAMPLE_TIME 100
 #define CONTROL_SAMPLE_TIME 100
 
 /* USER CODE END PD */
@@ -85,27 +82,22 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
-
 SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart1;
 
-//osThreadId CurrentReadHandle;
 osThreadId DataLoggingHandle;
 osThreadId EncoderReadingsHandle;
 osThreadId ControlActuatorHandle;
 /* USER CODE BEGIN PV */
 
+//global variables
 float encoder_position;
-int adc_value;
-float current_value, current_offset, read_voltage, voltage_offset;
-int state;
-float act_lvl, k;
-float theta_0, theta_1, vel;
-int start_time, current_time;
+int state; //actuation state
+float act_lvl, d; //level of actuation and duty cycle definitions
+float theta_0, theta_1, vel; //read angles and calculated angular velocity
 
 /* USER CODE END PV */
 
@@ -115,8 +107,6 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_SPI2_Init(void);
-static void MX_ADC1_Init(void);
-//void StartTaskCurrentRead(void const * argument);
 void StartTaskDataLogging(void const * argument);
 void StartTaskEncoderReadings(void const * argument);
 void StartTaskActuator(void const * argument);
@@ -161,21 +151,12 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM2_Init();
   MX_SPI2_Init();
-  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
-//  current_offset = 0;
-//  //current_sensor_offsetting(); //reads value when current is equal to 0
-//
+  encoder_init();   //encoder initialization function
+  encoder_set_zero_pos(); //encoder zeroing function
 
-  //initialization function
-  encoder_init();
-  //zeroing function
-  encoder_set_zero_pos(); //zeroing encoder if necessary
-
-  state = 0; //initial control state
-
-
+  state = 0; //initial actuation state
 
   /* USER CODE END 2 */
 
@@ -192,10 +173,6 @@ int main(void)
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the thread(s) */
-  /* definition and creation of CurrentRead */
-//  osThreadDef(CurrentRead, StartTaskCurrentRead, osPriorityRealtime, 0, 128);
-//  CurrentReadHandle = osThreadCreate(osThread(CurrentRead), NULL);
-//
   /* definition and creation of DataLogging */
   osThreadDef(DataLogging, StartTaskDataLogging, osPriorityNormal, 0, 128);
   DataLoggingHandle = osThreadCreate(osThread(DataLogging), NULL);
@@ -242,7 +219,6 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /**Initializes the CPU, AHB and APB busses clocks 
   */
@@ -270,57 +246,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
-
-/**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
-{
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
-  /**Common config 
-  */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = ENABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /**Configure Regular Channel 
-  */
-  sConfig.Channel = ADC_CHANNEL_4;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
 }
 
 /**
@@ -436,7 +361,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 9600;
+  huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -493,57 +418,27 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StartTaskCurrentRead */
+/* USER CODE BEGIN Header_StartTaskDataLogging */
 /**
-  * @brief  Function implementing the CurrentRead thread.
-  * @param  argument: Not used 
-  * @retval None
-  */
-/* USER CODE END Header_StartTaskCurrentRead */
-//void StartTaskCurrentRead(void const * argument)
-//{
-//
-//  /* USER CODE BEGIN 5 */
-//  HAL_ADC_Start(&hadc1); //start adc channel
-//
-//  /* Infinite loop */
-//  for(;;)
-//  {
-//	  HAL_ADC_PollForConversion(&hadc1, 100); //wait for conversion
-//	  adc_value = HAL_ADC_GetValue(&hadc1);
-//	  read_voltage = (adc_value)*(3300/4095.0); //value in mV
-//	  current_value = (read_voltage - voltage_offset)/(185); //result in A
-//	  current_value = 2*current_value; //multiples by 2 to scale for current division
-//    osDelay(CURRENT_READ_SAMPLE_TIME); //read current every 50ms
-//  }
-//  /* USER CODE END 5 */
-//}
-//
-///* USER CODE BEGIN Header_StartTaskDataLogging */
-///**
-//* @brief Function implementing the DataLogging thread.
-//* @param argument: Not used
-//* @retval None
-//*/
+* @brief Function implementing the DataLogging thread.
+* @param argument: Not used
+* @retval None
+*/
 /* USER CODE END Header_StartTaskDataLogging */
 void StartTaskDataLogging(void const * argument)
 {
-  /* USER CODE BEGIN StartTaskDataLogging */
-  /* Infinite loop */
-  int i = 0; //to save iteration counting
-  current_time = 0;
 
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
   for(;;)
   {
-//	 current_time = i*(DATA_LOGGING_SAMPLE_TIME);
-//	 i++;
-	 write_sampled_data(current_time, encoder_position, vel, state, 0);//, state, current_value);
-     osDelay(DATA_LOGGING_SAMPLE_TIME); //50ms delay
+     write_sampled_data(encoder_position, vel, state); //writes data to SD card
+	 osDelay(DATA_LOGGING_SAMPLE_TIME); //sample time delay
   }
-  /* USER CODE END StartTaskDataLogging */
+  /* USER CODE END 5 */ 
 }
 
-///* USER CODE BEGIN Header_StartTaskEncoderReadings */
+/* USER CODE BEGIN Header_StartTaskEncoderReadings */
 ///**
 //* @brief Function implementing the EncoderReadings thread.
 //* @param argument: Not used
@@ -560,15 +455,14 @@ void StartTaskEncoderReadings(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	 theta_0 = theta_1;
-	 encoder_read_pos(&encoder_position);
-	 theta_1 = encoder_position; //new angle reading
-	 /* Calculates angular velocity */
-	 v = (theta_1 - theta_0)/(ENCODER_SAMPLE_TIME*0.001); //ang velocity in degrees/s
-	 if (v<0){vel = -v;}
-	 else{vel = v;}
-     osDelay(ENCODER_SAMPLE_TIME); //50ms delay
-
+  	 theta_0 = theta_1; //gets last iteration value of read position
+  	 encoder_read_pos(&encoder_position);
+  	 theta_1 = encoder_position; //new angle reading
+  	 /* Calculates angular velocity */
+  	 v = (theta_1 - theta_0)/(ENCODER_SAMPLE_TIME*0.001); //ang velocity in degrees/s
+  	 if (v<0){vel = -v;} //gets vel as an absolute value
+  	 else{vel = v;}
+     osDelay(ENCODER_SAMPLE_TIME); //sample time delay
   }
   /* USER CODE END StartTaskEncoderReadings */
 }
@@ -589,22 +483,20 @@ void StartTaskActuator(void const * argument)
   for(;;)
   {
 	  /* Checks threshold */
-	  if((vel < LOWER_EPSILON)  && state==1){
+	  if((vel < LOWER_OMEGA)  && state==1){ //state == 1 means fixed actuation state
 		state = 0; // changes to no actuation state
-		k = 0;
+		d = 0;
 	  }
 
-	  else if ((vel > UPPER_EPSILON) && state==0){
-		state = 1; // changes to state with actuation
-		k = CONST_DUTY_CYCLE;
+	  else if ((vel > UPPER_OMEGA) && state==0){ //state == 0 means no actuation state
+		state = 1; // changes to state with fixed actuation
+		d = CONST_DUTY_CYCLE;
 	  }
 
-	  act_lvl = k;
-//	  LED_actuation_mode(state);
+	  act_lvl = d;
+//  	LED_actuation_mode(state); //test this
 	  pwm_set_duty_cycle(act_lvl); //set pwm duty cycle
-
-
-    osDelay(CONTROL_SAMPLE_TIME); // delay
+    osDelay(CONTROL_SAMPLE_TIME); //sample time delay
   }
   /* USER CODE END StartTaskActuator */
 }
